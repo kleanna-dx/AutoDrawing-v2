@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Step Fillet Render Test</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div style="width:1200px;height:700px;border:1px solid #ccc;background:#fff;">
+  <svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+    <g id="drawingLayer"></g>
+  </svg>
+</div>
+<script src="js/drawing-model.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/ai-engine.js"></script>
+<script>
+(function() {
+  try {
+    // DEMO_SHAFT_SPEC을 복사하고 chainGears만 오버라이드
+    var demoSpec = JSON.parse(JSON.stringify(AIEngine.DEMO_SHAFT_SPEC));
+    demoSpec.geometrySpec.chainGears = [{
+      id: 'CG1',
+      section: 'S1',
+      side: 'left',
+      chainSpec: 'RS35',
+      teeth: 9,
+      outerDiam: 31,
+      boreDiam: 0,
+      gearWidth: 8,
+      boss: {
+        count: 2,
+        bosses: [
+          { outerDiam: 22, thickness: 5, fillet: { value: 2, side: 'both' } },
+          { outerDiam: 18, thickness: 4, fillet: { value: 1.5, side: 'both' } }
+        ]
+      },
+      confidence: 'confirmed'
+    }];
+    // chainGears를 spec 최상위에도 추가 (generateFromSpec이 spec.chainGears로 접근)
+    demoSpec.chainGears = demoSpec.geometrySpec.chainGears;
+    const result = AIEngine.generateFromCustomSpec(demoSpec);
+    console.log('Sections:', result.sections?.length);
+    console.log('Elements:', result.elements?.length);
+    
+    // Log all arc elements
+    let arcCount = 0;
+    result.elements.forEach(function(el, i) {
+      if (el._arc) {
+        arcCount++;
+        console.log('ARC' + arcCount + ': r=' + el._arc.r.toFixed(1) + ' sweep=' + el._arc.sweep +
+          ' start=(' + el.x1.toFixed(1) + ',' + el.y1.toFixed(1) + ')' +
+          ' end=(' + el.x2.toFixed(1) + ',' + el.y2.toFixed(1) + ')' +
+          ' center=(' + el._arc.cx.toFixed(1) + ',' + el._arc.cy.toFixed(1) + ')');
+      }
+    });
+    console.log('Total arcs: ' + arcCount);
+    
+    const svgEl = document.getElementById('mainSvg');
+    Renderer.init(svgEl);
+    Renderer.render(result);
+    
+    console.log('Render complete');
+    document.title = 'SVG_READY';
+  } catch(e) {
+    console.error('Error:', e.message, e.stack);
+    document.title = 'ERROR';
+  }
+})();
+</script>
+</body>
+</html>

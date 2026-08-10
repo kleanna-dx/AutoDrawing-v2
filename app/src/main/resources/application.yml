@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: autodrawing-platform
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  web:
+    resources:
+      add-mappings: true
+
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+# OpenAI API settings (fallback: ~/.genspark_llm.yaml)
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:}
+
+logging:
+  level:
+    com.company: DEBUG

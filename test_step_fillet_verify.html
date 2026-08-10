@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html><head><title>Step Fillet Verification</title></head>
+<body>
+<h2>Step Fillet Direction Verification (SVG arc sweep values)</h2>
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <style>text{font-family:monospace;font-size:10px;}</style>
+
+  <!-- Layout: [Gear]─[Boss1]─[Boss2] 
+       Gear:  x=100..200, topY=100, botY=300
+       Boss1: x=200..300, topY=130, botY=270
+       Boss2: x=300..380, topY=150, botY=250
+       R = 15px
+       CL at y=200
+  -->
+  <line x1="50" y1="200" x2="500" y2="200" stroke="#ccc" stroke-dasharray="10,3"/>
+  
+  <!-- Gear body -->
+  <rect x="100" y="100" width="100" height="200" fill="#e8e8ff" stroke="blue" stroke-width="0.5"/>
+  <text x="150" y="95" text-anchor="middle" fill="blue">Gear Ø200</text>
+
+  <!-- Boss1 body -->
+  <rect x="200" y="130" width="100" height="140" fill="#e8ffe8" stroke="green" stroke-width="0.5"/>
+  <text x="250" y="125" text-anchor="middle" fill="green">Boss1 Ø140</text>
+
+  <!-- Boss2 body -->
+  <rect x="300" y="150" width="80" height="100" fill="#fff8e8" stroke="orange" stroke-width="0.5"/>
+  <text x="340" y="145" text-anchor="middle" fill="orange">Boss2 Ø100</text>
+
+  <!-- Now draw the CORRECT step fillets for Boss1 -->
+  <!-- LEFT SIDE of Boss1 (x=200): step from Gear(top=100) to Boss1(top=130) -->
+  
+  <!-- LEFT-TOP step fillet -->
+  <!-- Inside corner at (200, 130): step goes UP (y decreasing) and boss goes RIGHT (x increasing) -->
+  <!-- Arc center at (200+R, 130-R) = (215, 115) — inside the "notch" -->
+  <!-- Start on step vertical line: (200, 115) -->
+  <!-- End on boss horizontal line: (215, 130) -->
+  <!-- Arc goes from (200,115) clockwise to (215,130): sweep=1 -->
+  <line x1="200" y1="100" x2="200" y2="115" stroke="black" stroke-width="2"/>
+  <line x1="215" y1="130" x2="300" y2="130" stroke="black" stroke-width="2"/>
+  <path d="M 200 115 A 15 15 0 0 1 215 130" stroke="red" stroke-width="2.5" fill="none"/>
+  <circle cx="200" cy="130" r="2" fill="orange"/>
+  <text x="220" y="113" fill="red" font-size="9">LT: sweep=1 ✓</text>
+  
+  <!-- LEFT-BOTTOM step fillet -->
+  <!-- Inside corner at (200, 270): step goes DOWN and boss goes RIGHT -->
+  <!-- Arc center at (200+R, 270+R) = (215, 285) — inside the notch -->
+  <!-- Start on boss horizontal line: (215, 270) -->
+  <!-- End on step vertical line: (200, 285) -->
+  <!-- Arc goes from (215,270) clockwise to (200,285): sweep=1 -->
+  <line x1="215" y1="270" x2="300" y2="270" stroke="black" stroke-width="2"/>
+  <line x1="200" y1="285" x2="200" y2="300" stroke="black" stroke-width="2"/>
+  <path d="M 215 270 A 15 15 0 0 1 200 285" stroke="red" stroke-width="2.5" fill="none"/>
+  <circle cx="200" cy="270" r="2" fill="orange"/>
+  <text x="220" y="290" fill="red" font-size="9">LB: sweep=1 ✓</text>
+  
+  <!-- RIGHT SIDE of Boss1 (x=300): step from Boss1(top=130) to Boss2(top=150) -->
+  
+  <!-- RIGHT-TOP step fillet -->
+  <!-- Inside corner at (300, 150): step goes UP from Boss2 to Boss1 level, boss1 comes from LEFT -->
+  <!-- Wait - boss1 top is at 130, boss2 top is at 150. The step at x=300: -->
+  <!--   Boss1 top line at y=130 ends at x=300 -->
+  <!--   Step vertical line at x=300 goes from y=130 DOWN to y=150 -->
+  <!--   Boss2 top line at y=150 starts at x=300 -->
+  <!-- The inside concave corner on boss1 side is at (300, 130) — NO! -->
+  <!-- Actually the fillet is at the STEP corner. There are TWO inside corners: -->
+  <!--   (300, 130) — where boss1 top meets the step going DOWN: this is boss1's corner -->
+  <!--   (300, 150) — where the step going UP meets boss2 top: this is boss2's corner -->
+  <!-- For BOSS1, the R-value applies at (300, 130) on the right side -->
+  
+  <!-- Right-top: inside corner at (300, 130) -->
+  <!-- Step goes DOWN (y increasing) from boss1 top(130) toward boss2 top(150) -->
+  <!-- Boss1 top line goes LEFT (x decreasing) from (300, 130) -->
+  <!-- Arc center at (300-R, 130+R) = (285, 145) — inside the notch -->
+  <!-- Start on boss horizontal: (285, 130) -->
+  <!-- End on step vertical: (300, 145) -->
+  <!-- From (285,130) to (300,145): sweep=1 -->
+  <line x1="215" y1="130" x2="285" y2="130" stroke="black" stroke-width="2"/>
+  <line x1="300" y1="145" x2="300" y2="150" stroke="black" stroke-width="2"/>
+  <path d="M 285 130 A 15 15 0 0 1 300 145" stroke="blue" stroke-width="2.5" fill="none"/>
+  <circle cx="300" cy="130" r="2" fill="orange"/>
+  <text x="265" y="143" fill="blue" font-size="9">RT: sweep=1 ✓</text>
+  
+  <!-- RIGHT-BOTTOM step fillet -->
+  <!-- Inside corner at (300, 270) -->
+  <!-- Step goes UP (y decreasing) from boss2 bot toward boss1 bot -->
+  <!-- Boss1 bot line goes LEFT from (300, 270) -->
+  <!-- Arc center at (300-R, 270-R) = (285, 255) — inside the notch -->
+  <!-- Start on step vertical: (300, 255) -->
+  <!-- End on boss horizontal: (285, 270) -->
+  <!-- From (300,255) to (285,270): sweep=1 -->
+  <line x1="300" y1="250" x2="300" y2="255" stroke="black" stroke-width="2"/>
+  <line x1="285" y1="270" x2="215" y2="270" stroke="black" stroke-width="2"/>
+  <path d="M 300 255 A 15 15 0 0 1 285 270" stroke="blue" stroke-width="2.5" fill="none"/>
+  <circle cx="300" cy="270" r="2" fill="orange"/>
+  <text x="265" y="260" fill="blue" font-size="9">RB: sweep=1 ✓</text>
+
+  <!-- Boss1 vertical lines (between fillets) -->
+  <line x1="200" y1="115" x2="200" y2="285" stroke="white" stroke-width="3"/>
+  <line x1="200" y1="130" x2="200" y2="270" stroke="black" stroke-width="2"/>
+  <line x1="300" y1="130" x2="300" y2="270" stroke="white" stroke-width="3"/>
+  <line x1="300" y1="145" x2="300" y2="255" stroke="black" stroke-width="2"/>
+  
+  <!-- Labels -->
+  <text x="250" y="350" text-anchor="middle" font-size="13" font-weight="bold">
+    ALL step fillets use sweep=1 (all arc inward into notch)
+  </text>
+  <text x="250" y="370" text-anchor="middle" font-size="11">
+    Fillet is at STEP corner (diameter transition), NOT boss rectangle corner
+  </text>
+  <text x="250" y="390" text-anchor="middle" font-size="11">
+    Arc center is INSIDE the concave notch (toward material interior)
+  </text>
+  
+  <!-- Key insight diagram -->
+  <g transform="translate(530, 50)">
+    <text x="200" y="20" text-anchor="middle" font-size="13" font-weight="bold">Key: Where is the fillet?</text>
+    
+    <!-- Cross-section profile -->
+    <text x="200" y="50" text-anchor="middle" font-size="11">Cross-section (top half):</text>
+    
+    <!-- Draw the profile -->
+    <line x1="50" y1="100" x2="150" y2="100" stroke="black" stroke-width="2"/>
+    <text x="100" y="95" text-anchor="middle" fill="blue" font-size="9">Gear top</text>
+    
+    <line x1="150" y1="100" x2="150" y2="130" stroke="black" stroke-width="2"/>
+    <text x="142" y="118" text-anchor="end" fill="gray" font-size="8">step</text>
+    
+    <line x1="150" y1="130" x2="250" y2="130" stroke="black" stroke-width="2"/>
+    <text x="200" y="142" text-anchor="middle" fill="green" font-size="9">Boss1 top</text>
+    
+    <line x1="250" y1="130" x2="250" y2="150" stroke="black" stroke-width="2"/>
+    
+    <line x1="250" y1="150" x2="330" y2="150" stroke="black" stroke-width="2"/>
+    <text x="290" y="162" text-anchor="middle" fill="orange" font-size="9">Boss2 top</text>
+    
+    <line x1="330" y1="150" x2="330" y2="180" stroke="black" stroke-width="2"/>
+    
+    <line x1="330" y1="180" x2="430" y2="180" stroke="black" stroke-width="2"/>
+    <text x="380" y="192" text-anchor="middle" fill="gray" font-size="9">Shaft top</text>
+    
+    <!-- Mark fillet locations -->
+    <circle cx="150" cy="130" r="5" fill="none" stroke="red" stroke-width="2"/>
+    <text x="155" y="115" fill="red" font-size="9">R fillet here</text>
+    
+    <circle cx="250" cy="150" r="5" fill="none" stroke="red" stroke-width="2"/>
+    <text x="255" y="145" fill="red" font-size="9">R fillet here</text>
+    
+    <circle cx="330" cy="180" r="5" fill="none" stroke="red" stroke-width="2"/>
+    <text x="335" y="175" fill="red" font-size="9">R fillet here</text>
+    
+    <text x="200" y="220" text-anchor="middle" font-size="11" fill="red">
+      Fillets go at INSIDE corners of steps!
+    </text>
+    <text x="200" y="240" text-anchor="middle" font-size="11">
+      Not at the boss rectangle corners!
+    </text>
+    
+    <!-- The wrong way -->
+    <text x="200" y="280" text-anchor="middle" font-size="13" font-weight="bold" fill="red">WRONG (current code):</text>
+    
+    <line x1="50" y1="330" x2="150" y2="330" stroke="black" stroke-width="2"/>
+    <line x1="150" y1="330" x2="150" y2="360" stroke="black" stroke-width="2"/>
+    
+    <!-- Boss1 with wrong corner fillets -->
+    <line x1="165" y1="360" x2="235" y2="360" stroke="black" stroke-width="2"/>
+    <line x1="150" y1="375" x2="150" y2="400" stroke="black" stroke-width="2"/>
+    <!-- Wrong arc at boss TL corner -->
+    <path d="M 165 360 A 15 15 0 0 1 150 375" stroke="red" stroke-width="2" fill="none"/>
+    <text x="130" y="370" text-anchor="end" fill="red" font-size="8">WRONG arc</text>
+    
+    <line x1="250" y1="360" x2="250" y2="380" stroke="black" stroke-width="2"/>
+    
+    <text x="200" y="430" text-anchor="middle" font-size="10" fill="red">
+      The arc rounds the boss corner (like rounding a box corner)
+    </text>
+    <text x="200" y="445" text-anchor="middle" font-size="10" fill="red">
+      Instead of smoothing the step transition!
+    </text>
+  </g>
+</svg>
+</body>
+</html>
