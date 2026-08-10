@@ -14,3 +14,21 @@ data/*/
 data/*/backups/
 *.broken-*
 autodrawing_data_backup_*.tar.gz
+
+# Gradle / Java build artifacts
+.gradle/
+build/
+app/build/
+core/build/
+module-autodrawing/build/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath

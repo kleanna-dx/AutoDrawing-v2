@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head><title>Boss R-Value Problem Analysis</title></head>
+<body>
+<h2>Boss1 R-Value Problem Analysis</h2>
+<p>The current code applies fillets at the 4 corners of the boss rectangle (TL, BL, TR, BR).<br>
+But in mechanical engineering, R-values go at the STEP transitions where diameters change.</p>
+<svg width="1200" height="600" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: monospace; font-size: 11px; }
+    .label { font-size: 13px; font-weight: bold; }
+  </style>
+  
+  <!-- Title -->
+  <text x="300" y="30" class="label" text-anchor="middle">CURRENT (WRONG): Fillets at boss corners only</text>
+  <text x="900" y="30" class="label" text-anchor="middle">CORRECT: Fillets at diameter transitions (steps)</text>
+  
+  <!-- ===== LEFT: CURRENT WRONG VERSION ===== -->
+  <g transform="translate(50, 200)">
+    <!-- Centerline -->
+    <line x1="0" y1="100" x2="500" y2="100" stroke="#ccc" stroke-dasharray="10,5" stroke-width="0.5"/>
+    
+    <!-- Gear body (larger rectangle) -->
+    <rect x="30" y="20" width="80" height="160" fill="none" stroke="black" stroke-width="1.5"/>
+    <text x="70" y="15" text-anchor="middle" fill="blue">Gear</text>
+    <text x="70" y="205" text-anchor="middle" fill="blue">Ø31</text>
+    
+    <!-- Boss1 (medium rectangle, right of gear) -->
+    <rect x="110" y="45" width="50" height="110" fill="none" stroke="black" stroke-width="1.5"/>
+    <text x="135" y="40" text-anchor="middle" fill="green">Boss1</text>
+    <text x="135" y="170" text-anchor="middle" fill="green">Ø22</text>
+    
+    <!-- Boss2 (smaller rectangle, right of boss1) -->
+    <rect x="160" y="55" width="40" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+    <text x="180" y="50" text-anchor="middle" fill="orange">Boss2</text>
+    <text x="180" y="160" text-anchor="middle" fill="orange">Ø18</text>
+    
+    <!-- Shaft -->
+    <rect x="200" y="70" width="80" height="60" fill="none" stroke="black" stroke-width="1.5"/>
+    <text x="240" y="65" text-anchor="middle" fill="gray">Shaft</text>
+    <text x="240" y="145" text-anchor="middle" fill="gray">Ø12</text>
+    
+    <!-- WRONG R-values at boss1 corners (bulging outward from rectangle) -->
+    <!-- TL corner - arc curving OUTWARD from boss -->
+    <path d="M 120 45 A 10 10 0 0 0 110 55" stroke="red" stroke-width="2" fill="none"/>
+    <text x="100" y="38" fill="red" font-size="10">✗ R</text>
+    
+    <!-- BL corner -->
+    <path d="M 110 145 A 10 10 0 0 0 120 155" stroke="red" stroke-width="2" fill="none"/>
+    <text x="100" y="168" fill="red" font-size="10">✗ R</text>
+    
+    <!-- TR corner -->
+    <path d="M 150 45 A 10 10 0 0 1 160 55" stroke="red" stroke-width="2" fill="none"/>
+    <text x="152" y="38" fill="red" font-size="10">✗ R</text>
+    
+    <!-- BR corner -->
+    <path d="M 160 145 A 10 10 0 0 1 150 155" stroke="red" stroke-width="2" fill="none"/>
+    <text x="152" y="168" fill="red" font-size="10">✗ R</text>
+    
+    <!-- Problem labels -->
+    <text x="135" y="230" text-anchor="middle" fill="red" class="label">4 wrong fillets on boss1!</text>
+    <text x="135" y="250" text-anchor="middle" fill="red">Arcs at corners of boss rect</text>
+    <text x="135" y="265" text-anchor="middle" fill="red">These don't make physical sense!</text>
+  </g>
+  
+  <!-- ===== RIGHT: CORRECT VERSION ===== -->
+  <g transform="translate(650, 200)">
+    <!-- Centerline -->
+    <line x1="0" y1="100" x2="500" y2="100" stroke="#ccc" stroke-dasharray="10,5" stroke-width="0.5"/>
+    
+    <!-- Gear body -->
+    <rect x="30" y="20" width="80" height="160" fill="none" stroke="black" stroke-width="1.5"/>
+    <text x="70" y="15" text-anchor="middle" fill="blue">Gear</text>
+    
+    <!-- Boss1 - horizontal lines -->
+    <line x1="110" y1="45" x2="160" y2="45" stroke="black" stroke-width="1.5"/>
+    <line x1="110" y1="155" x2="160" y2="155" stroke="black" stroke-width="1.5"/>
+    <!-- Boss1 - vertical lines at LEFT (gear→boss1 transition): shortened by R -->
+    <line x1="110" y1="30" x2="110" y2="45" stroke="black" stroke-width="1.5"/>
+    <line x1="110" y1="155" x2="110" y2="170" stroke="black" stroke-width="1.5"/>
+    <!-- Boss1 - vertical lines at RIGHT (boss1→boss2 transition): shortened by R -->
+    <line x1="160" y1="55" x2="160" y2="45" stroke="black" stroke-width="1.5"/>
+    <line x1="160" y1="145" x2="160" y2="155" stroke="black" stroke-width="1.5"/>
+    <text x="135" y="40" text-anchor="middle" fill="green">Boss1 Ø22</text>
+
+    <!-- Boss2 -->
+    <line x1="160" y1="55" x2="200" y2="55" stroke="black" stroke-width="1.5"/>
+    <line x1="160" y1="145" x2="200" y2="145" stroke="black" stroke-width="1.5"/>
+    <text x="180" y="50" text-anchor="middle" fill="orange">Boss2 Ø18</text>
+
+    <!-- Shaft -->
+    <rect x="200" y="70" width="80" height="60" fill="none" stroke="black" stroke-width="1.5"/>
+    <text x="240" y="65" text-anchor="middle" fill="gray">Shaft Ø12</text>
+    
+    <!-- CORRECT R-values at STEP transitions -->
+    <!-- Gear→Boss1 LEFT TOP: fillet curves INTO the notch (between gear top and boss1 top) -->
+    <path d="M 110 35 A 10 10 0 0 1 110 45" stroke="green" stroke-width="2" fill="none"/>
+    <!-- Wait, this isn't right either. Let me think about this more carefully. -->
+    
+    <!-- At the gear→boss1 step, the gear is taller (y=20) and boss1 is shorter (y=45) -->
+    <!-- The step is at x=110, from y=20 (gear top) to y=45 (boss1 top) -->
+    <!-- The fillet is at the INSIDE corner where the gear top line meets the step vertical line -->
+    <!-- This is at the point (110, 45) - the inside corner -->
+    <!-- Fillet: horizontal tangent at (110-R, 45) and vertical tangent at (110, 45-R) wait no -->
+    <!-- Actually: the step goes from gear edge down to boss1 edge. The fillet is in the concave corner. -->
+    
+    <!-- LEFT step top: fillet at inside corner (110, 45) - curves toward the notch material -->
+    <path d="M 110 35 A 10 10 0 0 0 120 45" stroke="green" stroke-width="2.5" fill="none"/>
+    <text x="95" y="33" fill="green" font-size="10">✓ R</text>
+    
+    <!-- LEFT step bottom: fillet at inside corner (110, 155) -->
+    <path d="M 120 155 A 10 10 0 0 0 110 165" stroke="green" stroke-width="2.5" fill="none"/>
+    <text x="95" y="175" fill="green" font-size="10">✓ R</text>
+    
+    <!-- RIGHT step top (boss1→boss2): fillet at inside corner (160, 55) -->
+    <path d="M 150 45 A 10 10 0 0 1 160 55" stroke="green" stroke-width="2.5" fill="none"/>
+    <text x="162" y="43" fill="green" font-size="10">✓ R</text>
+    
+    <!-- RIGHT step bottom (boss1→boss2): fillet at inside corner (160, 145) -->
+    <path d="M 160 145 A 10 10 0 0 1 150 155" stroke="green" stroke-width="2.5" fill="none"/>
+    <text x="162" y="162" fill="green" font-size="10">✓ R</text>
+    
+    <!-- Labels -->
+    <text x="135" y="230" text-anchor="middle" fill="green" class="label">Correct: fillets at STEP corners</text>
+    <text x="135" y="250" text-anchor="middle" fill="green">Arcs curve into the notch (concave)</text>
+    <text x="135" y="265" text-anchor="middle" fill="green">where diameter changes occur</text>
+  </g>
+</svg>
+
+<h3>Key Insight</h3>
+<p>The boss is NOT an isolated rectangle. In the front view, the boss is part of a continuous cross-section profile.<br>
+The R-value applies at the STEP (diameter transition) between:</p>
+<ul>
+  <li>Gear body edge → Boss1 edge (left side of boss1)</li>
+  <li>Boss1 edge → Boss2 edge (right side of boss1)</li>
+</ul>
+<p>The fillet curves INTO the concave notch formed by the step, NOT around the boss rectangle corners.</p>
+</body>
+</html>

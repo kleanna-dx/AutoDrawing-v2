@@ -1,0 +1,9 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    compileOnly 'org.springframework:spring-web:6.1.6'
+    compileOnly 'jakarta.validation:jakarta.validation-api:3.0.2'
+    compileOnly 'com.fasterxml.jackson.core:jackson-annotations:2.15.3'
+}

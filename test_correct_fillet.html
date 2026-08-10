@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head><title>Correct Fillet Geometry Test</title></head>
+<body>
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: monospace; font-size: 10px; }
+  </style>
+  
+  <!-- CORRECT FILLET AT A STEP TRANSITION (diameter change) -->
+  <!-- Example: Gear (large) → Boss1 (smaller) transition, TOP side -->
+  <!-- Layout: side=left, so [Gear]─[Boss1]... gear is to the LEFT -->
+  
+  <!-- Coordinate system:
+       - Center line (shaft axis) at y=400
+       - Gear outer radius = 80px, so gTopY = 320, gBotY = 480
+       - Boss1 outer radius = 55px, so bTopY = 345, bBotY = 455
+       - Gear right edge = Boss1 left edge = x=300 (bLeft)
+       - R-value fillet radius = 15px
+  -->
+  
+  <g transform="translate(0,0)">
+    <!-- Center line -->
+    <line x1="100" y1="400" x2="700" y2="400" stroke="#999" stroke-dasharray="10,5"/>
+    <text x="90" y="403" text-anchor="end" fill="#999">CL</text>
+    
+    <!-- Gear body (left side) - only right portion shown -->
+    <rect x="150" y="320" width="150" height="160" fill="#e0e0ff" fill-opacity="0.3" stroke="blue" stroke-width="1"/>
+    <text x="225" y="310" text-anchor="middle" fill="blue">Gear (Ø160)</text>
+    
+    <!-- Boss1 (right of gear) -->
+    <rect x="300" y="345" width="100" height="110" fill="#e0ffe0" fill-opacity="0.3" stroke="green" stroke-width="1"/>
+    <text x="350" y="340" text-anchor="middle" fill="green">Boss1 (Ø110)</text>
+    
+    <!-- THE STEP at x=300: vertical line from gear top (320) to boss top (345) -->
+    <!-- This step line is where the diameter changes -->
+    
+    <!-- === TOP-LEFT STEP CORNER (most important to understand) === -->
+    <!-- The inside corner is at (300, 345) -->
+    <!-- Two lines meet here:
+         1. Step vertical line: from y=320 DOWN to y=345 at x=300
+         2. Boss horizontal line: from x=300 RIGHT to x=400 at y=345
+         The inside (concave) corner faces UP-RIGHT (toward the material)
+    -->
+    
+    <!-- R=15: The fillet arc center is at (300+15, 345-15) = (315, 330) -->
+    <!-- This places the center in the "notch" area (inside the concave corner) -->
+    <!-- Arc starts at (300, 330) on the vertical step line -->
+    <!-- Arc ends at (315, 345) on the horizontal boss line -->
+    
+    <!-- STEP VERTICAL LINE (shortened by R) -->
+    <line x1="300" y1="320" x2="300" y2="330" stroke="black" stroke-width="2"/>
+    <text x="290" y="325" text-anchor="end" fill="gray" font-size="9">step line (gear→boss)</text>
+    
+    <!-- BOSS HORIZONTAL LINE (shortened by R) -->
+    <line x1="315" y1="345" x2="400" y2="345" stroke="black" stroke-width="2"/>
+    
+    <!-- CORRECT FILLET ARC: from (300, 330) to (315, 345), center (315, 330) -->
+    <!-- This arc curves INWARD into the concave notch -->
+    <!-- SVG: M 300 330 A 15 15 0 0 1 315 345 -->
+    <path d="M 300 330 A 15 15 0 0 1 315 345" stroke="red" stroke-width="3" fill="none"/>
+    <text x="320" y="325" fill="red" font-size="12" font-weight="bold">CORRECT R fillet</text>
+    <text x="320" y="338" fill="red" font-size="9">Arc center: (315, 330)</text>
+    <text x="320" y="350" fill="red" font-size="9">Arc curves into the notch ✓</text>
+    
+    <!-- Show the arc center -->
+    <circle cx="315" cy="330" r="2" fill="red"/>
+    <text x="318" y="328" fill="red" font-size="8">center</text>
+    
+    <!-- Show the inside corner point -->
+    <circle cx="300" cy="345" r="3" fill="orange"/>
+    <text x="278" y="355" fill="orange" font-size="9">inside corner</text>
+    
+    <!-- === WRONG FILLET (what the current code does) === -->
+    <!-- Current code puts the fillet at the boss rectangle corner (300, 345) -->
+    <!-- with center at (300+R, 345+R) = (315, 360) - INSIDE the boss rectangle -->
+    <!-- This curves AWAY from the notch! -->
+    <g transform="translate(0, 200)">
+      <text x="150" y="110" fill="blue">Gear</text>
+      <rect x="150" y="120" width="150" height="160" fill="#ffe0e0" fill-opacity="0.3" stroke="blue" stroke-width="1"/>
+      <rect x="300" y="145" width="100" height="110" fill="#ffe0e0" fill-opacity="0.3" stroke="green" stroke-width="1"/>
+      <text x="350" y="140" fill="green">Boss1</text>
+      
+      <!-- WRONG: boss TL corner fillet with center INSIDE boss at (315, 160) -->
+      <!-- horizontal line shortened from left -->
+      <line x1="315" y1="145" x2="400" y2="145" stroke="black" stroke-width="2"/>
+      <!-- vertical line shortened from top -->
+      <line x1="300" y1="160" x2="300" y2="255" stroke="black" stroke-width="2"/>
+      <!-- WRONG arc from (315, 145) to (300, 160) - curves OUTWARD from the notch -->
+      <path d="M 315 145 A 15 15 0 0 1 300 160" stroke="red" stroke-width="3" fill="none"/>
+      <text x="260" y="140" fill="red" font-size="12" font-weight="bold">WRONG ✗</text>
+      <text x="260" y="153" fill="red" font-size="9">Arc at boss corner</text>
+      <text x="260" y="166" fill="red" font-size="9">Curves away from notch</text>
+      
+      <!-- Step line still goes full length (not shortened) -->
+      <line x1="300" y1="120" x2="300" y2="145" stroke="black" stroke-width="2" stroke-dasharray="4,2"/>
+      <text x="285" y="133" text-anchor="end" fill="gray" font-size="8">step line (no fillet)</text>
+    </g>
+  </g>
+  
+  <!-- Explanation -->
+  <text x="400" y="750" text-anchor="middle" font-size="14" font-weight="bold">
+    R-value fillet must be at the STEP corner (diameter transition), NOT at the boss rectangle corner
+  </text>
+  <text x="400" y="770" text-anchor="middle" font-size="11">
+    The fillet smooths the INSIDE corner of the step to reduce stress concentration
+  </text>
+</svg>
+</body>
+</html>

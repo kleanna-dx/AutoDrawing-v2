@@ -1,0 +1,23 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+springBoot {
+    mainClass = 'com.company.app.AutodrawingApplication'
+}
+
+bootJar {
+    archiveFileName = 'autodrawing-platform.jar'
+}
+
+dependencies {
+    implementation project(':core')
+    implementation project(':module-autodrawing')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // YAML config reading
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+}

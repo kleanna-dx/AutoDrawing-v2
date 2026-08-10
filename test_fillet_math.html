@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fillet Math - Definitive Test</title>
+<style>body{font-family:monospace;background:#f5f5f5;padding:20px} .case{display:inline-block;margin:20px;background:white;padding:15px;border:1px solid #ccc}</style>
+</head><body>
+<h2>필렛(Fillet) = 두 직선이 90°로 만나는 꼭짓점을 R인 원호로 깎아내기</h2>
+<p>원리: 반지름 R인 원이 두 직선에 접하고, 꼭짓점은 원 바깥에 위치. 원호가 코너를 "오목하게" 깎아냄.</p>
+
+<svg id="mainSvg" width="1200" height="900" style="background:white; border:1px solid #999">
+  <defs>
+    <marker id="dot-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6">
+      <circle cx="5" cy="5" r="4" fill="blue"/>
+    </marker>
+  </defs>
+</svg>
+
+<script>
+const svg = document.getElementById('mainSvg');
+const R = 40; // Large radius for visibility
+
+function addText(x, y, text, color='black', size=12) {
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', x); t.setAttribute('y', y);
+  t.setAttribute('fill', color); t.setAttribute('font-size', size);
+  t.setAttribute('font-family', 'monospace');
+  t.textContent = text;
+  svg.appendChild(t);
+}
+
+function addLine(x1, y1, x2, y2, color='black', width=2, dash='') {
+  const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+  l.setAttribute('stroke',color); l.setAttribute('stroke-width',width);
+  if(dash) l.setAttribute('stroke-dasharray', dash);
+  svg.appendChild(l);
+}
+
+function addCircle(cx, cy, r, color='gray') {
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+  c.setAttribute('fill','none'); c.setAttribute('stroke',color);
+  c.setAttribute('stroke-width',1); c.setAttribute('stroke-dasharray','3,3');
+  svg.appendChild(c);
+}
+
+function addDot(cx, cy, color='blue', r=4) {
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+  c.setAttribute('fill',color);
+  svg.appendChild(c);
+}
+
+function addArc(x1, y1, x2, y2, r, sweep, color='red', width=3) {
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', `M ${x1} ${y1} A ${r} ${r} 0 0 ${sweep} ${x2} ${y2}`);
+  p.setAttribute('fill','none'); p.setAttribute('stroke',color);
+  p.setAttribute('stroke-width', width);
+  svg.appendChild(p);
+}
+
+// ========================================
+// GEOMETRY DEFINITION FOR STEPPED SHAFT
+// ========================================
+// A shaft cross-section (side view) looks like:
+//
+//   adjLargerL case (adjacent is bigger, e.g. gear on left):
+//   
+//   adjTopY ──────────┐
+//                      │ (step vertical line)
+//   bTopY    ┌─────── ┘  ← THIS is the 90° inside corner to fillet
+//            │ boss
+//   bBotY    └─────── ┐  ← THIS is the 90° inside corner to fillet
+//                      │
+//   adjBotY ──────────┘
+//
+//   The "inside" corner at (bLeft, bTopY): 
+//   - Vertical line goes UP from bTopY
+//   - Horizontal line goes RIGHT from bLeft
+//   - The fillet circle center is at (bLeft + R, bTopY - R)
+//   - Arc start = tangent on vertical line = (bLeft, bTopY - R)
+//   - Arc end = tangent on horizontal line = (bLeft + R, bTopY)
+
+// ============ CASE 1: adjLargerL, Left-Top ============
+{
+  const ox = 120, oy = 120;
+  addText(ox - 80, oy - 80, 'Case 1: adjLargerL Left-Top', 'black', 14);
+  
+  // Corner vertex at (ox, oy+60) - where step meets boss
+  const cornerX = ox, cornerY = oy + 60;
+  
+  // Lines: vertical goes up from corner, horizontal goes right from corner
+  addLine(ox, oy - 20, ox, cornerY, 'black', 3);     // vertical (step line going up)
+  addLine(cornerX, cornerY, ox + 120, cornerY, 'black', 3);  // horizontal (boss top)
+  
+  addDot(cornerX, cornerY, 'blue', 5); // corner vertex
+  addText(cornerX + 5, cornerY + 15, `corner (${cornerX},${cornerY})`, 'blue', 10);
+  
+  // Fillet circle: tangent to both lines
+  // Center = (cornerX + R, cornerY - R) = inside the "notch"
+  const cx = cornerX + R, cy = cornerY - R;
+  addCircle(cx, cy, R, 'gray');
+  addDot(cx, cy, 'gray', 3);
+  addText(cx + 5, cy - 5, `center (${cx},${cy})`, 'gray', 10);
+  
+  // Tangent points:
+  // On vertical line: (cornerX, cornerY - R)
+  // On horizontal line: (cornerX + R, cornerY)
+  const startX = cornerX, startY = cornerY - R;
+  const endX = cornerX + R, endY = cornerY;
+  
+  addDot(startX, startY, 'green', 4);
+  addDot(endX, endY, 'green', 4);
+  
+  // TEST BOTH SWEEPS
+  addArc(startX, startY, endX, endY, R, 0, 'red', 3);   // sweep=0
+  addArc(startX, startY, endX, endY, R, 1, 'green', 3);  // sweep=1
+  
+  addText(ox + 50, oy - 10, 'Red=sweep0, Green=sweep1', 'black', 11);
+  
+  // Which one curves TOWARD the corner? That's the wrong one (convex).
+  // Which one curves AWAY from the corner (into the notch)? That's correct (concave).
+}
+
+// ============ CASE 2: adjLargerL, Left-Bottom ============
+{
+  const ox = 120, oy = 320;
+  addText(ox - 80, oy - 80, 'Case 2: adjLargerL Left-Bottom', 'black', 14);
+  
+  // Corner vertex: where horizontal boss bottom meets step going down
+  const cornerX = ox, cornerY = oy;
+  
+  addLine(cornerX, cornerY, ox + 120, cornerY, 'black', 3);  // horizontal (boss bottom)
+  addLine(ox, cornerY, ox, oy + 80, 'black', 3);             // vertical (step going down)
+  
+  addDot(cornerX, cornerY, 'blue', 5);
+  addText(cornerX + 5, cornerY - 8, `corner`, 'blue', 10);
+  
+  // Center = (cornerX + R, cornerY + R) 
+  const cx = cornerX + R, cy = cornerY + R;
+  addCircle(cx, cy, R, 'gray');
+  
+  // Tangent points: (cornerX + R, cornerY) on horizontal, (cornerX, cornerY + R) on vertical
+  const startX = cornerX + R, startY = cornerY;
+  const endX = cornerX, endY = cornerY + R;
+  
+  addDot(startX, startY, 'green', 4);
+  addDot(endX, endY, 'green', 4);
+  
+  addArc(startX, startY, endX, endY, R, 0, 'red', 3);
+  addArc(startX, startY, endX, endY, R, 1, 'green', 3);
+  
+  addText(ox + 50, oy - 30, 'Red=sweep0, Green=sweep1', 'black', 11);
+}
+
+// ============ CASE 3: adjLargerR, Right-Top ============
+{
+  const ox = 600, oy = 120;
+  addText(ox - 40, oy - 80, 'Case 3: adjLargerR Right-Top', 'black', 14);
+  
+  // Right side: step goes up, boss horizontal goes left
+  // Corner at (bRight, bTopY) - where horizontal boss meets step going up
+  const cornerX = ox + 120, cornerY = oy + 60;
+  
+  addLine(ox, cornerY, cornerX, cornerY, 'black', 3);       // horizontal (boss top, going left)
+  addLine(cornerX, oy - 20, cornerX, cornerY, 'black', 3);  // vertical (step going up)
+  
+  addDot(cornerX, cornerY, 'blue', 5);
+  addText(cornerX - 80, cornerY + 15, `corner`, 'blue', 10);
+  
+  // Center = (cornerX - R, cornerY - R) — inside the notch
+  const cx = cornerX - R, cy = cornerY - R;
+  addCircle(cx, cy, R, 'gray');
+  
+  // Tangent: on horizontal = (cornerX - R, cornerY), on vertical = (cornerX, cornerY - R)
+  const startX = cornerX - R, startY = cornerY;
+  const endX = cornerX, endY = cornerY - R;
+  
+  addDot(startX, startY, 'green', 4);
+  addDot(endX, endY, 'green', 4);
+  
+  addArc(startX, startY, endX, endY, R, 0, 'red', 3);
+  addArc(startX, startY, endX, endY, R, 1, 'green', 3);
+  
+  addText(ox + 50, oy - 10, 'Red=sweep0, Green=sweep1', 'black', 11);
+}
+
+// ============ CASE 4: adjLargerR, Right-Bottom ============
+{
+  const ox = 600, oy = 320;
+  addText(ox - 40, oy - 80, 'Case 4: adjLargerR Right-Bottom', 'black', 14);
+  
+  const cornerX = ox + 120, cornerY = oy;
+  
+  addLine(ox, cornerY, cornerX, cornerY, 'black', 3);       // horizontal (boss bottom)
+  addLine(cornerX, cornerY, cornerX, oy + 80, 'black', 3);  // vertical (step going down)
+  
+  addDot(cornerX, cornerY, 'blue', 5);
+  addText(cornerX - 80, cornerY - 8, `corner`, 'blue', 10);
+  
+  // Center = (cornerX - R, cornerY + R)
+  const cx = cornerX - R, cy = cornerY + R;
+  addCircle(cx, cy, R, 'gray');
+  
+  const startX = cornerX, startY = cornerY + R;
+  const endX = cornerX - R, endY = cornerY;
+  
+  addDot(startX, startY, 'green', 4);
+  addDot(endX, endY, 'green', 4);
+  
+  addArc(startX, startY, endX, endY, R, 0, 'red', 3);
+  addArc(startX, startY, endX, endY, R, 1, 'green', 3);
+  
+  addText(ox + 50, oy - 30, 'Red=sweep0, Green=sweep1', 'black', 11);
+}
+
+// ============ CASE 5: bossLargerL, Left-Top ============
+{
+  const ox = 120, oy = 550;
+  addText(ox - 80, oy - 80, 'Case 5: bossLargerL Left-Top', 'black', 14);
+  
+  // Boss is bigger than adjacent on left
+  // So the step goes DOWN from adjTopY to bTopY
+  //
+  //   bTopY    ┌──────────── (boss top)
+  //            │
+  //   adjTopY ─┘  ← THIS is the 90° inside corner
+  //   
+  // Corner at (bLeft, adjTopY)
+  const cornerX = ox, cornerY = oy;
+  
+  // Horizontal goes LEFT from corner (adjacent top line)
+  addLine(ox - 80, cornerY, cornerX, cornerY, 'black', 3);
+  // Vertical goes UP from corner (step)
+  addLine(cornerX, oy - 60, cornerX, cornerY, 'black', 3);
+  
+  addDot(cornerX, cornerY, 'blue', 5);
+  addText(cornerX + 5, cornerY + 15, `corner`, 'blue', 10);
+  
+  // Center = (cornerX - R, cornerY - R) — this time the notch is to the LEFT-UP
+  // Wait, no. The boss goes UP from corner and adj goes LEFT.
+  // The "inside" of the L is the upper-left quadrant.
+  // Actually: boss vertical goes UP, adj horizontal goes LEFT.
+  // The concave fillet should be in the LOWER-RIGHT of the corner (the re-entrant).
+  // No wait - the INSIDE corner is where the material DOESN'T exist.
+  
+  // Let me think again. The profile is:
+  //   ─────────┐ adjTopY
+  //            │
+  //    ────────┘ bTopY (boss is lower because boss is bigger diameter? No...)
+  
+  // Actually boss bigger means boss radius is larger, so boss extends MORE from centerline.
+  // bTopY is HIGHER (smaller Y) than adjTopY.
+  // So:
+  //
+  //   bTopY   ┌────────── (boss extends higher)
+  //           │
+  //   adjTopY ┘────────── (adj is lower, extends less)
+  //
+  // Corner = (bLeft, adjTopY)
+  // Vertical goes UP from adjTopY, horizontal goes RIGHT from bLeft
+  // But this is the case where the LEFT adjacent is SMALLER.
+  // The "notch" is at upper-left.
+  
+  // Center = (cornerX + R, cornerY + R) — into material, NO!
+  // Center must be in the OPEN space (the notch).
+  // Open space is to the LEFT and ABOVE the corner:
+  //   - LEFT of the vertical line
+  //   - ABOVE the horizontal line
+  // Wait, there's no opening above. Let me re-draw:
+  //
+  //   bTopY ────────────┐ boss top horizontal
+  //                     │ step vertical (at bLeft=cornerX)
+  //   adjTopY ──────────┘ corner here
+  //           ←adj line
+  //
+  // The MATERIAL is: above bTopY and right of bLeft (boss), below adjTopY and left of bLeft (adj)
+  // The EMPTY notch is: between adjTopY and bTopY, to the LEFT of bLeft
+  // So center = (cornerX - R, cornerY - R)? No...
+  //
+  // I need to draw this on-screen properly.
+  
+  // Let me just draw both sweeps and see which one curves INTO the empty L corner.
+  
+  // For bossLargerL: the profile looks like an INVERTED L
+  //   │
+  //   │  (boss taller)
+  //   └────  (adj shorter)
+  //
+  // The inside of the L = upper-LEFT region from the corner.
+  // Center of fillet circle = (cornerX - R, cornerY - R) — upper-left from corner
+  // Wait, but the vertical line is AT cornerX and the horizontal is AT cornerY.
+  // The circle must be tangent to x=cornerX and y=cornerY.
+  // If it's in the upper-left: center = (cornerX - R, cornerY - R)
+  
+  const cx = cornerX - R, cy = cornerY - R;
+  addCircle(cx, cy, R, 'gray');
+  addDot(cx, cy, 'gray', 3);
+  
+  // Tangent on vertical (x=cornerX): (cornerX, cornerY - R)
+  // Tangent on horizontal (y=cornerY): (cornerX - R, cornerY)
+  const startX = cornerX - R, startY = cornerY;  // on horizontal
+  const endX = cornerX, endY = cornerY - R;       // on vertical
+  
+  addDot(startX, startY, 'green', 4);
+  addDot(endX, endY, 'green', 4);
+  
+  addArc(startX, startY, endX, endY, R, 0, 'red', 3);
+  addArc(startX, startY, endX, endY, R, 1, 'green', 3);
+  
+  addText(ox - 50, oy - 90, 'Red=sweep0, Green=sweep1', 'black', 11);
+}
+
+// ============ CASE 6: bossLargerR, Right-Top ============
+{
+  const ox = 600, oy = 550;
+  addText(ox - 40, oy - 80, 'Case 6: bossLargerR Right-Top', 'black', 14);
+  
+  // Boss bigger on right side:
+  //   ┌──────────── bTopY (boss)
+  //   │
+  //   ┘──────────── adjTopY (adj)
+  //
+  // Corner at (bRight, adjTopY)
+  const cornerX = ox + 120, cornerY = oy;
+  
+  addLine(cornerX, oy - 60, cornerX, cornerY, 'black', 3);  // vertical up
+  addLine(cornerX, cornerY, ox + 200, cornerY, 'black', 3);  // horizontal right
+  
+  addDot(cornerX, cornerY, 'blue', 5);
+  addText(cornerX + 5, cornerY + 15, `corner`, 'blue', 10);
+  
+  // Notch is in upper-RIGHT. Center = (cornerX + R, cornerY - R)
+  const cx = cornerX + R, cy = cornerY - R;
+  addCircle(cx, cy, R, 'gray');
+  
+  const startX = cornerX, startY = cornerY - R;
+  const endX = cornerX + R, endY = cornerY;
+  
+  addDot(startX, startY, 'green', 4);
+  addDot(endX, endY, 'green', 4);
+  
+  addArc(startX, startY, endX, endY, R, 0, 'red', 3);
+  addArc(startX, startY, endX, endY, R, 1, 'green', 3);
+  
+  addText(ox + 50, oy - 90, 'Red=sweep0, Green=sweep1', 'black', 11);
+}
+
+// Label at bottom
+addText(100, 870, '정답: 코너(파란점)에서 멀어지는 방향으로 오목하게 들어가는 원호 = 빈 공간(노치) 안쪽으로 들어가는 것', 'black', 14);
+addText(100, 890, '원의 중심은 노치 안쪽에 위치, 꼭짓점은 원 바깥에 위치', 'black', 14);
+
+</script>
+</body></html>
