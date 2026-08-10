@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDrawing Platform — API Dashboard</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; background:#0f172a; color:#e2e8f0; min-height:100vh; }
+    .header { background:linear-gradient(135deg,#1e3a5f,#2563eb); padding:32px 24px; text-align:center; }
+    .header h1 { font-size:28px; font-weight:700; color:#fff; }
+    .header p { color:#93c5fd; margin-top:8px; font-size:14px; }
+    .container { max-width:1100px; margin:0 auto; padding:24px; }
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .stat-card { background:#1e293b; border-radius:12px; padding:20px; border:1px solid #334155; }
+    .stat-card .label { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; }
+    .stat-card .value { font-size:32px; font-weight:700; color:#60a5fa; margin-top:4px; }
+    .section { background:#1e293b; border-radius:12px; padding:24px; margin-bottom:24px; border:1px solid #334155; }
+    .section h2 { font-size:18px; margin-bottom:16px; color:#f1f5f9; display:flex; align-items:center; gap:8px; }
+    .api-list { display:flex; flex-direction:column; gap:8px; }
+    .api-item { display:flex; align-items:center; gap:12px; padding:12px 16px; background:#0f172a; border-radius:8px; border:1px solid #334155; cursor:pointer; transition:all 0.2s; }
+    .api-item:hover { border-color:#3b82f6; background:#172033; }
+    .method { font-size:11px; font-weight:700; padding:4px 10px; border-radius:4px; min-width:60px; text-align:center; }
+    .method.get { background:#065f46; color:#6ee7b7; }
+    .method.post { background:#92400e; color:#fcd34d; }
+    .method.put { background:#1e3a8a; color:#93c5fd; }
+    .method.patch { background:#581c87; color:#d8b4fe; }
+    .method.delete { background:#7f1d1d; color:#fca5a5; }
+    .api-path { font-family:'Fira Code',monospace; font-size:14px; color:#e2e8f0; }
+    .api-desc { font-size:12px; color:#94a3b8; margin-left:auto; }
+    .result-box { background:#0f172a; border-radius:8px; padding:16px; margin-top:16px; border:1px solid #334155; display:none; }
+    .result-box pre { font-family:'Fira Code',monospace; font-size:13px; color:#a5f3fc; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; }
+    .result-box .status { font-size:12px; margin-bottom:8px; }
+    .result-box .status.ok { color:#6ee7b7; }
+    .result-box .status.err { color:#fca5a5; }
+    .toolbar { display:flex; gap:8px; margin-bottom:16px; }
+    .btn { padding:10px 20px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .btn-primary { background:#2563eb; color:#fff; }
+    .btn-primary:hover { background:#1d4ed8; }
+    .btn-secondary { background:#334155; color:#e2e8f0; }
+    .btn-secondary:hover { background:#475569; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+    .badge-ok { background:#065f46; color:#6ee7b7; }
+    .badge-err { background:#7f1d1d; color:#fca5a5; }
+    footer { text-align:center; padding:24px; color:#64748b; font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AutoDrawing Platform</h1>
+    <p>Spring Boot 3.2.5 &middot; Java 17 &middot; Gradle Multi-Module &middot; REST API</p>
+  </div>
+  <div class="container">
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">Drawings</div>
+        <div class="value" id="statDrawings">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">API Status</div>
+        <div class="value" id="statApi" style="font-size:20px;">Checking...</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Module</div>
+        <div class="value" style="font-size:20px;">autodrawing</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Database</div>
+        <div class="value" style="font-size:20px;">H2 (Dev)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Quick Actions</h2>
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="createSample()">Create Sample Drawing</button>
+        <button class="btn btn-secondary" onclick="loadDrawings()">Refresh List</button>
+        <button class="btn btn-secondary" onclick="testAllEndpoints()">Test All APIs</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>REST API Endpoints</h2>
+      <div class="api-list">
+        <div class="api-item" onclick="callApi('GET','/autodrawing-api/drawings')">
+          <span class="method get">GET</span>
+          <span class="api-path">/autodrawing-api/drawings</span>
+          <span class="api-desc">도면 목록 조회</span>
+        </div>
+        <div class="api-item" onclick="callApi('GET','/autodrawing-api/drawings/1')">
+          <span class="method get">GET</span>
+          <span class="api-path">/autodrawing-api/drawings/{id}</span>
+          <span class="api-desc">도면 단건 조회</span>
+        </div>
+        <div class="api-item" onclick="callApi('GET','/autodrawing-api/drawings/search?keyword=전동기')">
+          <span class="method get">GET</span>
+          <span class="api-path">/autodrawing-api/drawings/search?keyword=</span>
+          <span class="api-desc">도면 검색</span>
+        </div>
+        <div class="api-item" onclick="callApi('GET','/autodrawing-api/drawings/status/DRAFT')">
+          <span class="method get">GET</span>
+          <span class="api-path">/autodrawing-api/drawings/status/{status}</span>
+          <span class="api-desc">상태별 조회</span>
+        </div>
+        <div class="api-item" onclick="createSample()">
+          <span class="method post">POST</span>
+          <span class="api-path">/autodrawing-api/drawings</span>
+          <span class="api-desc">도면 생성</span>
+        </div>
+        <div class="api-item" onclick="callApi('GET','/autodrawing-api/drawings/1/versions')">
+          <span class="method get">GET</span>
+          <span class="api-path">/autodrawing-api/drawings/{id}/versions</span>
+          <span class="api-desc">버전 목록</span>
+        </div>
+        <div class="api-item" onclick="callApi('GET','/autodrawing-api/pdf-exports/drawing/1')">
+          <span class="method get">GET</span>
+          <span class="api-path">/autodrawing-api/pdf-exports/drawing/{id}</span>
+          <span class="api-desc">PDF 출력 이력</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>API Response</h2>
+      <div class="result-box" id="resultBox" style="display:block;">
+        <div class="status" id="resultStatus"></div>
+        <pre id="resultJson">Click an API endpoint above to test...</pre>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    AutoDrawing Platform v1.0.0-SNAPSHOT &middot; com.company.module.autodrawing
+  </footer>
+
+  <script>
+    const BASE = '';
+
+    async function callApi(method, path, body) {
+      const box = document.getElementById('resultBox');
+      const st = document.getElementById('resultStatus');
+      const json = document.getElementById('resultJson');
+      box.style.display = 'block';
+      st.textContent = 'Loading...';
+      st.className = 'status';
+      json.textContent = '';
+
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(BASE + path, opts);
+        const data = await res.json();
+        st.textContent = method + ' ' + path + ' — ' + res.status;
+        st.className = 'status ' + (res.ok ? 'ok' : 'err');
+        json.textContent = JSON.stringify(data, null, 2);
+        return data;
+      } catch (e) {
+        st.textContent = 'Error: ' + e.message;
+        st.className = 'status err';
+        json.textContent = e.stack || e.message;
+      }
+    }
+
+    let sampleIdx = 0;
+    async function createSample() {
+      sampleIdx++;
+      const samples = [
+        { drawingName:'전동기 축 도면', drawingNo:'DRW-2024-' + String(sampleIdx).padStart(3,'0'), description:'전동기 축 기본 설계 (KS B 2023)', shaftDiameter:45, shaftLength:280, sectionCount:5 },
+        { drawingName:'감속기 입력축', drawingNo:'DRW-2024-' + String(sampleIdx).padStart(3,'0'), description:'감속기 입력축 (키홈 KS B 1311)', shaftDiameter:35, shaftLength:200, sectionCount:4 },
+        { drawingName:'펌프 구동축', drawingNo:'DRW-2024-' + String(sampleIdx).padStart(3,'0'), description:'펌프 구동축 (스냅링 KS B 1336)', shaftDiameter:50, shaftLength:350, sectionCount:6 },
+      ];
+      const s = samples[(sampleIdx - 1) % 3];
+      await callApi('POST', '/autodrawing-api/drawings', s);
+      loadDrawings();
+    }
+
+    async function loadDrawings() {
+      const data = await callApi('GET', '/autodrawing-api/drawings');
+      if (data && data.success) {
+        document.getElementById('statDrawings').textContent = data.data.totalElements;
+      }
+    }
+
+    async function testAllEndpoints() {
+      const box = document.getElementById('resultBox');
+      const st = document.getElementById('resultStatus');
+      const json = document.getElementById('resultJson');
+      box.style.display = 'block';
+      let results = [];
+
+      const endpoints = [
+        ['GET', '/autodrawing-api/drawings'],
+        ['GET', '/autodrawing-api/drawings/search?keyword=test'],
+        ['GET', '/autodrawing-api/drawings/status/DRAFT'],
+      ];
+      for (const [m, p] of endpoints) {
+        try {
+          const res = await fetch(BASE + p);
+          results.push({ endpoint: m + ' ' + p, status: res.status, ok: res.ok });
+        } catch (e) {
+          results.push({ endpoint: m + ' ' + p, status: 'ERROR', ok: false });
+        }
+      }
+      st.textContent = 'All API Tests Complete';
+      st.className = 'status ok';
+      json.textContent = JSON.stringify(results, null, 2);
+    }
+
+    // Init
+    (async () => {
+      try {
+        const res = await fetch(BASE + '/autodrawing-api/drawings');
+        const data = await res.json();
+        document.getElementById('statApi').innerHTML = '<span class="badge badge-ok">ONLINE</span>';
+        document.getElementById('statDrawings').textContent = data.data.totalElements;
+      } catch {
+        document.getElementById('statApi').innerHTML = '<span class="badge badge-err">OFFLINE</span>';
+      }
+    })();
+  </script>
+</body>
+</html>

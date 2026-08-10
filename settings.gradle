@@ -1,0 +1,5 @@
+rootProject.name = 'autodrawing-platform'
+
+include 'core'
+include 'module-autodrawing'
+include 'app'
